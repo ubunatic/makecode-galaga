@@ -112,9 +112,6 @@ wall.setPosition(30, 50)
 spacePlane.setPosition(10, 50)
 info.setLife(3)
 controller.moveSprite(spacePlane, 200, 200)
-forever(function () {
-	
-})
 game.onUpdateInterval(500, function () {
     bogey = sprites.create(img`
         . . . . . . . . . . . . . . . . 
