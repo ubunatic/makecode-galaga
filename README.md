@@ -1,7 +1,7 @@
  
 
 
-> Open this page at [https://ubunatic.github.io/makecode-galga/](https://ubunatic.github.io/makecode-galga/)
+> Open this page at [https://ubunatic.github.io/makecode-galaga/](https://ubunatic.github.io/makecode-galaga/)
 
 ## Use as Extension
 
