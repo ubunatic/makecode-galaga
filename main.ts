@@ -225,14 +225,43 @@ sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Shield, function (sprite, otherSp
     destroySprite(sprite)
     info.changeScoreBy(1)
 })
+controller.A.onEvent(ControllerButtonEvent.Repeated, function () {
+    shoot(sprites.createProjectileFromSprite(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . 4 4 2 . . . . 
+        . . . . . . . 4 2 4 5 4 2 . . . 
+        . . . . 4 . 4 5 4 5 6 5 4 2 . . 
+        . . 4 . . 4 5 4 5 5 6 6 5 2 . . 
+        . . . . 4 . 4 5 4 5 6 5 4 2 . . 
+        . . . . . . . 4 2 4 5 4 2 . . . 
+        . . . . . . . . . 4 4 2 . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, ship, 200, 0), _DART)
+    pause(_SHOOT_DELAY)
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Food, function (sprite, otherSprite) {
+    otherSprite.destroy()
+    _SHOOT_DELAY = 0
+    pause(10000)
+    _SHOOT_DELAY = 100
+})
 function destroy (projectile: Sprite, sprite: Sprite) {
     destroySprite(projectile)
     destroySprite(sprite)
 }
 let bogey: Sprite = null
+let superShot: Sprite = null
 let wall: Sprite = null
 let ship: Sprite = null
 let bombTime = 0
+let _SHOOT_DELAY = 0
 let _DART = 0
 let _SHIELD = 0
 let _SHIELD_TIME = 0
@@ -241,6 +270,7 @@ _SHIELD_TIME = 300
 _SHIELD = 0
 _DART = 1
 let _BOMB_COOLDOWN = 1000
+_SHOOT_DELAY = 100
 bombTime = 0
 ship = sprites.create(img`
     ........................
@@ -292,6 +322,30 @@ ship.setPosition(10, 50)
 wall.follow(ship, 30)
 info.setLife(3)
 controller.moveSprite(ship, 200, 200)
+game.onUpdateInterval(5000, function () {
+    superShot = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . b b b b . . . . . . 
+        . . . . . b a a a a b . . . . . 
+        . . . . c a a 5 5 a a b . . . . 
+        . . . . c a 5 a a 5 a b . . . . 
+        . . . . c a 5 a a a a b . . . . 
+        . . . . c a a 5 5 a a b . . . . 
+        . . . . c a a a a 5 a b . . . . 
+        . . . . c a 5 a a 5 a b . . . . 
+        . . . . c a a 5 5 a a b . . . . 
+        . . . . . c a a a a b . . . . . 
+        . . . . . . c c c c . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.Food)
+    superShot.setVelocity(-200, 0)
+    superShot.left = scene.screenWidth()
+    superShot.y = randint(0, scene.screenHeight())
+    superShot.setFlag(SpriteFlag.AutoDestroy, true)
+})
 game.onUpdateInterval(500, function () {
     bogey = sprites.create(img`
         . . . . . . . . . . . . . . . . 
