@@ -303,7 +303,7 @@ let x_ship_pic: Image = null
 let SCORE_BONUS = 0
 let SHOOT_DELAY = 0
 let SHIELD_POWER = 0
-music.setVolume(0)
+music.setVolume(50)
 SHIELD_POWER = 4
 SHOOT_DELAY = 250
 SCORE_BONUS = 0
