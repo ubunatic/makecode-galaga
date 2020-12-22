@@ -11,7 +11,7 @@ sprites.onCreated(SpriteKind.Enemy, function (sprite) {
 	
 })
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (x_shield_level >= 0) {
+    if (x_shield_level == 100) {
         x_shield_level = 0
         wall.setImage(img`
             . . . . . . . . . . . . . . . . 
