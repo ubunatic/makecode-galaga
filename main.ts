@@ -434,7 +434,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.FirePower, function (sprite, oth
     info.stopCountdown()
     info.startCountdown(10)
     SHOOT_DELAY = SHOOT_DELAY / 2
-    SCORE_BONUS = SCORE_BONUS + 1
+    SCORE_BONUS = 1
     blinkShip()
 })
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Player, function (sprite, otherSprite) {
