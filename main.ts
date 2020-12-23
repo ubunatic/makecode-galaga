@@ -807,7 +807,9 @@ function createStatus (sprite: Sprite, hp: number) {
 }
 function damage (sprite: Sprite, projectile: Sprite, hp: number) {
     statusbars.getStatusBarAttachedTo(StatusBarKind.Health, sprite).value += hp
-    destroySprite(projectile)
+    if (_enemy.kind() != SpriteKind.Nil) {
+        destroySprite(projectile)
+    }
 }
 function welcome () {
     game.splash("Survive " + PLAY_TIME + " seconds!")
@@ -920,19 +922,19 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 })
 let statusbar: StatusBarSprite = null
 let camera: Sprite = null
-let _shield_frame_duration: number = []
+let _shield_frame_duration = 0
 let projectile: Sprite = null
 let _virus: Sprite = null
 let _enemy: Sprite = null
 let _nil: Sprite = null
-let _shield_level: number = []
+let _shield_level = 0
 let ship: Sprite = null
 let wall: Sprite = null
-let MIN_SCORE: number = []
-let PLAY_TIME: number = []
-let DAMAGE_FACTOR: number = []
-let SHOOT_DELAY: number = []
-let SHIELD_POWER: number = []
+let MIN_SCORE = 0
+let PLAY_TIME = 0
+let DAMAGE_FACTOR = 0
+let SHOOT_DELAY = 0
+let SHIELD_POWER = 0
 initX()
 music.setVolume(50)
 SHIELD_POWER = 4
@@ -1004,25 +1006,59 @@ spawnAt(sprites.create(img`
 animateShipL1()
 createStatus(ship, 100)
 welcome()
-game.onUpdateInterval(randint(100, 1000), function () {
-    spawn(sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . b b b b . . . . . . 
-        . . . . . b a a a a b . . . . . 
-        . . . . c a 5 5 5 a a b . . . . 
-        . . . . c a 5 a a 5 a b . . . . 
-        . . . . c a 5 a a 5 a b . . . . 
-        . . . . c a 5 5 5 a a b . . . . 
-        . . . . c a 5 a a a a b . . . . 
-        . . . . c a 5 a a a a b . . . . 
-        . . . . c a 5 a a a a b . . . . 
-        . . . . . c a a a a b . . . . . 
-        . . . . . . c c c c . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `, SpriteKind.FirePower), -100)
+game.onUpdateInterval(2000, function () {
+    if (randint(1, 3) == 1) {
+        spawn(sprites.create(img`
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . b b b b . . . . . . 
+            . . . . . b a a a a b . . . . . 
+            . . . . c a 5 5 5 a a b . . . . 
+            . . . . c a 5 a a 5 a b . . . . 
+            . . . . c a 5 a a 5 a b . . . . 
+            . . . . c a 5 5 5 a a b . . . . 
+            . . . . c a 5 a a a a b . . . . 
+            . . . . c a 5 a a a a b . . . . 
+            . . . . c a 5 a a a a b . . . . 
+            . . . . . c a a a a b . . . . . 
+            . . . . . . c c c c . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `, SpriteKind.FirePower), -100)
+    }
+    if (randint(1, 9) == 1) {
+        spawn(sprites.create(img`
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . 9 9 9 9 . . . . . . 
+            . . . . . 9 6 6 6 6 9 . . . . . 
+            . . . . 8 6 6 1 1 6 6 9 . . . . 
+            . . . . 8 6 1 6 6 1 6 9 . . . . 
+            . . . . 8 6 1 6 6 6 6 9 . . . . 
+            . . . . 8 6 6 1 1 6 6 9 . . . . 
+            . . . . 8 6 6 6 6 1 6 9 . . . . 
+            . . . . 8 6 1 6 6 1 6 9 . . . . 
+            . . . . 8 6 6 1 1 6 6 9 . . . . 
+            . . . . . 8 6 6 6 6 8 . . . . . 
+            . . . . . . 8 8 8 8 . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `, SpriteKind.ShieldPower), -100)
+    }
+})
+game.onUpdateInterval(1000, function () {
+    if (randint(0, 1) < SPAWN_RATE) {
+        if (false) {
+            _virus = spawnAt(sprites.create(img`
+                . 
+                `, SpriteKind.Enemy), -50, _enemy.x, _enemy.y)
+            createStatus(_virus, 25)
+            animateVirus(_virus)
+            _virus.follow(ship, 20)
+        }
+    }
 })
 game.onUpdateInterval(100, function () {
     // trigger score check
@@ -1035,36 +1071,4 @@ game.onUpdateInterval(100, function () {
         createStatus(_enemy, 100)
         animateEnemy(_enemy)
     }
-})
-game.onUpdateInterval(100, function () {
-    if (randint(0, 10) < SPAWN_RATE) {
-        if (false) {
-            _virus = spawnAt(sprites.create(img`
-                . 
-                `, SpriteKind.Virus), -50, _enemy.x, _enemy.y)
-            createStatus(_virus, 25)
-            animateVirus(_virus)
-            _virus.follow(ship, 20)
-        }
-    }
-})
-game.onUpdateInterval(randint(8000, 12000), function () {
-    spawn(sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . 9 9 9 9 . . . . . . 
-        . . . . . 9 6 6 6 6 9 . . . . . 
-        . . . . 8 6 6 1 1 6 6 9 . . . . 
-        . . . . 8 6 1 6 6 1 6 9 . . . . 
-        . . . . 8 6 1 6 6 6 6 9 . . . . 
-        . . . . 8 6 6 1 1 6 6 9 . . . . 
-        . . . . 8 6 6 6 6 1 6 9 . . . . 
-        . . . . 8 6 1 6 6 1 6 9 . . . . 
-        . . . . 8 6 6 1 1 6 6 9 . . . . 
-        . . . . . 8 6 6 6 6 8 . . . . . 
-        . . . . . . 8 8 8 8 . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `, SpriteKind.ShieldPower), -100)
 })
