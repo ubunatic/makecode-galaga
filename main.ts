@@ -832,7 +832,7 @@ function createStatus (sprite: Sprite, hp: number) {
 }
 function damage (sprite: Sprite, projectile: Sprite, hp: number) {
     statusbars.getStatusBarAttachedTo(StatusBarKind.Health, sprite).value += hp
-    if (_enemy.kind() != SpriteKind.Nil) {
+    if (projectile.kind() != SpriteKind.Nil) {
         destroySprite(projectile)
     }
 }
@@ -1012,8 +1012,6 @@ ship = spawnAt(sprites.create(img`
     . . . . . . . . . . . . . . . . . . . . . . . . 
     . . . . . . . . . . . . . . . . . . . . . . . . 
     `, SpriteKind.Player), 0, 10, 50)
-controller.moveSprite(ship, 100, 100)
-ship.setFlag(SpriteFlag.StayInScreen, true)
 spawnAt(sprites.create(img`
     . . . . . . . . . . . . . . . . 
     . . . . . . . . . . . . . . . . 
@@ -1035,6 +1033,10 @@ spawnAt(sprites.create(img`
 animateShipL1()
 createStatus(ship, 100)
 welcome()
+game.onUpdate(function () {
+    ship.y = Math.min(Math.max(0, ship.y + controller.dy()), scene.screenHeight())
+    ship.x = Math.min(Math.max(0, ship.x + controller.dx()), scene.screenWidth())
+})
 game.onUpdateInterval(2000, function () {
     if (randint(1, 3) == 1) {
         spawn(sprites.create(img`
