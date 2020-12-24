@@ -232,6 +232,9 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
         shootShield()
     }
 })
+function trackEnemy (enemy: Sprite) {
+    _enemies.push(enemy)
+}
 function initX () {
     _nil = sprites.create(img`
         . 
@@ -242,6 +245,7 @@ function initX () {
     _virus = sprites.create(img`
         . 
         `, SpriteKind.Nil)
+    _enemies = []
 }
 function shootShield () {
     projectile = sprites.createProjectileFromSprite(img`
@@ -285,6 +289,11 @@ function destroySprite (sprite: Sprite) {
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     shoot()
 })
+function untrackEnemy (sprite: Sprite) {
+    if (_enemies.indexOf(sprite) >= 0) {
+        _enemies.removeAt(_enemies.indexOf(sprite))
+    }
+}
 function animateVirus (sprite: Sprite) {
     animation.runImageAnimation(
     sprite,
@@ -392,6 +401,16 @@ function animateVirus (sprite: Sprite) {
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Projectile, function (sprite, otherSprite) {
     damage(sprite, otherSprite, -25 * DAMAGE_FACTOR)
 })
+function pickEnemy () {
+    _len = _enemies.length
+    if (_len) {
+        _enemy_index = randint(0, _len - 1)
+        _enemy = _enemies[_enemy_index]
+    } else {
+        _enemy = _nil
+    }
+    return _enemy
+}
 function animateShipL1 () {
     animation.runImageAnimation(
     ship,
@@ -798,6 +817,12 @@ function spawnAt (sprite: Sprite, vx: number, x: number, y: number) {
     sprite.setFlag(SpriteFlag.AutoDestroy, true)
     return sprite
 }
+sprites.onDestroyed(SpriteKind.Enemy, function (sprite) {
+    untrackEnemy(sprite)
+})
+function randomSpawn (rate: number) {
+    return Math.percentChance(rate * SPAWN_RATE)
+}
 function createStatus (sprite: Sprite, hp: number) {
     statusbar = statusbars.create(10, 1, StatusBarKind.Health)
     statusbar.attachToSprite(sprite, 1, 0)
@@ -923,13 +948,17 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
 let statusbar: StatusBarSprite = null
 let camera: Sprite = null
 let _shield_frame_duration = 0
+let _enemy_index = 0
+let _len = 0
 let projectile: Sprite = null
 let _virus: Sprite = null
 let _enemy: Sprite = null
 let _nil: Sprite = null
+let _enemies: Sprite[] = []
 let _shield_level = 0
 let ship: Sprite = null
 let wall: Sprite = null
+let SPAWN_RATE = 0
 let MIN_SCORE = 0
 let PLAY_TIME = 0
 let DAMAGE_FACTOR = 0
@@ -940,9 +969,9 @@ music.setVolume(50)
 SHIELD_POWER = 4
 SHOOT_DELAY = 250
 DAMAGE_FACTOR = 1
-PLAY_TIME = 10
+PLAY_TIME = 60
 MIN_SCORE = 0
-let SPAWN_RATE = 1
+SPAWN_RATE = 1
 wall = sprites.create(img`
     ................................
     ................................
@@ -1049,8 +1078,24 @@ game.onUpdateInterval(2000, function () {
     }
 })
 game.onUpdateInterval(1000, function () {
-    if (randint(0, 1) < SPAWN_RATE) {
-        if (false) {
+    SPAWN_RATE = Math.min(SPAWN_RATE + 0.2, 10)
+})
+game.onUpdateInterval(100, function () {
+    // trigger score check
+    checkScore()
+    if (randomSpawn(10)) {
+        _enemy = spawn(sprites.create(img`
+            . 
+            `, SpriteKind.Enemy), -50)
+        trackEnemy(_enemy)
+        createStatus(_enemy, 100)
+        animateEnemy(_enemy)
+    }
+})
+game.onUpdateInterval(100, function () {
+    if (randomSpawn(5)) {
+        _enemy = pickEnemy()
+        if (_enemy.kind() != SpriteKind.Nil && _enemy.x > 50) {
             _virus = spawnAt(sprites.create(img`
                 . 
                 `, SpriteKind.Enemy), -50, _enemy.x, _enemy.y)
@@ -1058,17 +1103,5 @@ game.onUpdateInterval(1000, function () {
             animateVirus(_virus)
             _virus.follow(ship, 20)
         }
-    }
-})
-game.onUpdateInterval(100, function () {
-    // trigger score check
-    checkScore()
-    if (randint(0, 10) < SPAWN_RATE) {
-        SPAWN_RATE = Math.min(SPAWN_RATE * 1.01, 10)
-        _enemy = spawn(sprites.create(img`
-            . 
-            `, SpriteKind.Enemy), -50)
-        createStatus(_enemy, 100)
-        animateEnemy(_enemy)
     }
 })
