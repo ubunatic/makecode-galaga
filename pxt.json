@@ -8,7 +8,8 @@
         "tilemaps": "github:microsoft/pxt-tilemaps#v1.10.0",
         "pxt-status-bar": "github:jwunderl/pxt-status-bar#v0.4.0",
         "palette": "*",
-        "storyboard": "*"
+        "storyboard": "*",
+        "arcade-text": "github:microsoft/arcade-text#v1.3.0"
     },
     "files": [
         "main.blocks",

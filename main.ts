@@ -8,6 +8,7 @@ namespace SpriteKind {
     export const Background = SpriteKind.create()
     export const Camera = SpriteKind.create()
     export const Nil = SpriteKind.create()
+    export const Health = SpriteKind.create()
 }
 function animateShotL2 (sprite: Sprite) {
     animation.runImageAnimation(
@@ -95,9 +96,16 @@ function animateShotL2 (sprite: Sprite) {
     true
     )
 }
+function createInfo () {
+    score = 0
+    ui_score = textsprite.create("0")
+    ui_score.top = 1
+    ui_score.left = 1
+}
 function checkScore () {
     if (game.runtime() > PLAY_TIME * 1000) {
         if (info.score() >= MIN_SCORE) {
+            info.setScore(score)
             game.over(true)
         } else {
             game.over(false)
@@ -246,6 +254,7 @@ function initX () {
         . 
         `, SpriteKind.Nil)
     _enemies = []
+    _last_shot_at = 0
 }
 function shootShield () {
     projectile = sprites.createProjectileFromSprite(img`
@@ -279,7 +288,7 @@ function shootShield () {
     music.jumpUp.play()
 }
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Wall, function (sprite, otherSprite) {
-    damage(sprite, _nil, -100)
+    changeHp(sprite, _nil, -100)
 })
 function destroySprite (sprite: Sprite) {
     sprite.setVelocity(0, 0)
@@ -292,6 +301,15 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
 function untrackEnemy (sprite: Sprite) {
     if (_enemies.indexOf(sprite) >= 0) {
         _enemies.removeAt(_enemies.indexOf(sprite))
+    }
+}
+function changeHp (sprite: Sprite, projectile: Sprite, hp: number) {
+    _status = statusbars.getStatusBarAttachedTo(StatusBarKind.Health, sprite)
+    if (isDefined("" + _status)) {
+        _status.value += hp
+    }
+    if (projectile.kind() != SpriteKind.Nil) {
+        destroySprite(projectile)
     }
 }
 function animateVirus (sprite: Sprite) {
@@ -399,7 +417,7 @@ function animateVirus (sprite: Sprite) {
     )
 }
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Projectile, function (sprite, otherSprite) {
-    damage(sprite, otherSprite, -25 * DAMAGE_FACTOR)
+    changeHp(sprite, otherSprite, -25 * DAMAGE_FACTOR)
 })
 function pickEnemy () {
     _len = _enemies.length
@@ -783,8 +801,12 @@ statusbars.onZero(StatusBarKind.Health, function (status) {
     if (status.spriteAttachedTo().kind() == SpriteKind.Player) {
         game.over(false)
     } else {
-        info.changeScoreBy(1)
+        addScore(1)
     }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Health, function (sprite, otherSprite) {
+    otherSprite.destroy()
+    changeHp(sprite, _nil, 10)
 })
 function shoot () {
     projectile = sprites.createProjectileFromSprite(img`
@@ -801,14 +823,16 @@ function shoot () {
     music.pewPew.play()
 }
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Shield, function (sprite, otherSprite) {
-    damage(sprite, _nil, -100)
+    changeHp(sprite, _nil, -100)
 })
 function spawn (sprite: Sprite, vx: number) {
     return spawnAt(sprite, vx, scene.screenWidth(), randint(0, scene.screenHeight()))
 }
 controller.A.onEvent(ControllerButtonEvent.Repeated, function () {
-    shoot()
-    pause(SHOOT_DELAY)
+    if (game.runtime() - _last_shot_at > SHOOT_DELAY) {
+        _last_shot_at = game.runtime()
+        shoot()
+    }
 })
 function spawnAt (sprite: Sprite, vx: number, x: number, y: number) {
     sprite.setVelocity(vx, 0)
@@ -816,6 +840,14 @@ function spawnAt (sprite: Sprite, vx: number, x: number, y: number) {
     sprite.y = y
     sprite.setFlag(SpriteFlag.AutoDestroy, true)
     return sprite
+}
+function isDefined (_any: string) {
+    if (_any == "undefined") {
+        console.logValue("any", _any)
+        return false
+    } else {
+        return true
+    }
 }
 sprites.onDestroyed(SpriteKind.Enemy, function (sprite) {
     untrackEnemy(sprite)
@@ -830,14 +862,8 @@ function createStatus (sprite: Sprite, hp: number) {
     statusbar.setColor(6, 15)
     return statusbar
 }
-function damage (sprite: Sprite, projectile: Sprite, hp: number) {
-    statusbars.getStatusBarAttachedTo(StatusBarKind.Health, sprite).value += hp
-    if (projectile.kind() != SpriteKind.Nil) {
-        destroySprite(projectile)
-    }
-}
 function welcome () {
-    game.splash("Survive " + PLAY_TIME + " seconds!")
+    game.splash("Survive " + PLAY_TIME + " seconds!", "Highscore: " + info.highScore())
 }
 function animateShotL1 (sprite: Sprite) {
     animation.runImageAnimation(
@@ -938,24 +964,32 @@ function animateShotL1 (sprite: Sprite) {
     true
     )
 }
+function addScore (num: number) {
+    score += num
+    ui_score.setText("" + score)
+}
 sprites.onOverlap(SpriteKind.Player, SpriteKind.ShieldPower, function (sprite, otherSprite) {
-    destroySprite(otherSprite)
+    otherSprite.destroy()
     spawnShield()
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    damage(sprite, otherSprite, -10)
+    changeHp(sprite, otherSprite, -10)
 })
 let statusbar: StatusBarSprite = null
 let camera: Sprite = null
 let _shield_frame_duration = 0
 let _enemy_index = 0
 let _len = 0
+let _status: StatusBarSprite = null
 let projectile: Sprite = null
+let _last_shot_at = 0
 let _virus: Sprite = null
 let _enemy: Sprite = null
 let _nil: Sprite = null
 let _enemies: Sprite[] = []
 let _shield_level = 0
+let ui_score: TextSprite = null
+let score = 0
 let ship: Sprite = null
 let wall: Sprite = null
 let SPAWN_RATE = 0
@@ -1012,27 +1046,11 @@ ship = spawnAt(sprites.create(img`
     . . . . . . . . . . . . . . . . . . . . . . . . 
     . . . . . . . . . . . . . . . . . . . . . . . . 
     `, SpriteKind.Player), 0, 10, 50)
-spawnAt(sprites.create(img`
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . 9 9 9 9 . . . . . . 
-    . . . . . 9 6 6 6 6 9 . . . . . 
-    . . . . 8 6 6 1 1 6 6 9 . . . . 
-    . . . . 8 6 1 6 6 1 6 9 . . . . 
-    . . . . 8 6 1 6 6 6 6 9 . . . . 
-    . . . . 8 6 6 1 1 6 6 9 . . . . 
-    . . . . 8 6 6 6 6 1 6 9 . . . . 
-    . . . . 8 6 1 6 6 1 6 9 . . . . 
-    . . . . 8 6 6 1 1 6 6 9 . . . . 
-    . . . . . 8 6 6 6 6 8 . . . . . 
-    . . . . . . 8 8 8 8 . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    `, SpriteKind.ShieldPower), -60, scene.screenWidth(), 50)
+console.logValue("ship", "" + ship.kind() + "(" + ship + ")")
 animateShipL1()
 createStatus(ship, 100)
 welcome()
+createInfo()
 game.onUpdate(function () {
     ship.y = Math.min(Math.max(0, ship.y + controller.dy()), scene.screenHeight())
     ship.x = Math.min(Math.max(0, ship.x + controller.dx()), scene.screenWidth())
@@ -1076,7 +1094,27 @@ game.onUpdateInterval(2000, function () {
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
             . . . . . . . . . . . . . . . . 
-            `, SpriteKind.ShieldPower), -100)
+            `, SpriteKind.ShieldPower), -90)
+    }
+    if (randint(1, 12) == 1) {
+        spawn(sprites.create(img`
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . b b b b b b . . . . . 
+            . . . . b 4 4 4 4 4 4 b . . . . 
+            . . . c 4 4 5 4 4 5 4 4 b . . . 
+            . . . c 4 4 5 4 4 5 4 4 b . . . 
+            . . . c 4 4 5 5 5 5 4 4 b . . . 
+            . . . c 4 4 5 4 4 5 4 4 b . . . 
+            . . . c 4 4 5 4 4 5 4 4 b . . . 
+            . . . . c 4 4 4 4 4 4 c . . . . 
+            . . . . . c c c c c c . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            `, SpriteKind.Health), -80)
     }
 })
 game.onUpdateInterval(1000, function () {
